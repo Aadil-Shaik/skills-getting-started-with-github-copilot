@@ -1,3 +1,59 @@
+// Search and filter logic for activities
+document.addEventListener('DOMContentLoaded', function () {
+  const searchInput = document.getElementById('search-input');
+  if (!searchInput) return;
+  searchInput.addEventListener('input', function () {
+    filterActivities(searchInput.value);
+  });
+});
+
+let allActivities = {};
+
+function filterActivities(query) {
+  const listDiv = document.getElementById('activities-list');
+  if (!listDiv) return;
+  const q = query.trim().toLowerCase();
+  let filtered = Object.entries(allActivities);
+  if (q) {
+    filtered = filtered.filter(([name, details]) => {
+      return (
+        name.toLowerCase().includes(q) ||
+        (details.schedule && details.schedule.toLowerCase().includes(q)) ||
+        (details.description && details.description.toLowerCase().includes(q))
+      );
+    });
+  }
+  renderActivities(filtered);
+}
+
+function renderActivities(activitiesArr) {
+  const listDiv = document.getElementById('activities-list');
+  if (!listDiv) return;
+  if (!activitiesArr.length) {
+    listDiv.innerHTML = '<p>No activities found.</p>';
+    return;
+  }
+  listDiv.innerHTML = activitiesArr.map(([name, details]) => `
+    <div class="activity-card">
+      <h4>${name}</h4>
+      <p>${details.description}</p>
+      <p><strong>Schedule:</strong> ${details.schedule}</p>
+      <p><strong>Participants:</strong> ${details.participants.length} / ${details.max_participants}</p>
+    </div>
+  `).join('');
+}
+
+// Fetch and display activities (with search support)
+async function fetchAndDisplayActivities() {
+  const res = await fetch('/activities');
+  allActivities = await res.json();
+  filterActivities(document.getElementById('search-input').value || '');
+}
+
+// On DOMContentLoaded, fetch activities
+document.addEventListener('DOMContentLoaded', fetchAndDisplayActivities);
+
+// ...existing code...
 document.addEventListener("DOMContentLoaded", () => {
   const activitiesList = document.getElementById("activities-list");
   const activitySelect = document.getElementById("activity");
